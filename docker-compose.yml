@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  # Streamlit Web Application
+  card-generator:
+    build: .
+    ports:
+      - "8501:8501"
+    environment:
+      - COMFYUI_SERVER_URL=http://comfyui:8188
+    depends_on:
+      - comfyui
+    restart: unless-stopped
+    volumes:
+      - ./logs:/app/logs
+    networks:
+      - cardgen-network
+
+  # ComfyUI Service (if you want to run ComfyUI in Docker too)
+  comfyui:
+    image: comfyui/comfyui:latest  # Replace with actual ComfyUI Docker image
+    ports:
+      - "8188:8188"
+    volumes:
+      - ./comfyui-models:/app/models
+      - ./comfyui-output:/app/output
+      - ./comfyui-input:/app/input
+    environment:
+      - PYTHONPATH=/app
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    restart: unless-stopped
+    networks:
+      - cardgen-network
+
+  # Nginx Reverse Proxy (optional)
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - card-generator
+    restart: unless-stopped
+    networks:
+      - cardgen-network
+
+  # Redis for session management (optional)
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    networks:
+      - cardgen-network
+
+networks:
+  cardgen-network:
+    driver: bridge
+
+volumes:
+  comfyui-models:
+  comfyui-output:
+  comfyui-input:
