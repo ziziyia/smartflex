@@ -87,7 +87,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Configuration
-COMFYUI_SERVER_URL = "http://localhost:8188"
+COMFYUI_SERVER_URL = "http://127.0.0.1:8188"
 
 class ComfyUIClient:
     def __init__(self, server_url: str):
