@@ -1,35 +1,49 @@
 # ComfyUI Card Generator - Streamlit Version
 
-A Streamlit web application for generating custom credit card designs using ComfyUI workflows.
+A modern Streamlit web application for generating custom credit card designs using ComfyUI workflows with AI-powered chip and card creation.
 
-## Features
+## 🌟 Features
 
-- **Step 1**: Generate custom card chips with different colors and shapes
-- **Step 2**: Create card background designs using ControlNet
+- **Step 1**: Generate custom card chips with different colors, shapes, and ControlNet support
+- **Step 2**: Create card background designs using ControlNet with Gemini AI prompt enhancement
 - **Step 3**: Combine elements and export final card design
+- **AI Enhancement**: Gemini API integration for professional prompt optimization
+- **Advanced Options**: ControlNet support for custom shapes and designs
+- **Progress Tracking**: Visual step indicator and progress monitoring
+- **Error Handling**: Comprehensive error handling and recovery
 
-## Prerequisites
+## 🛠️ Prerequisites
+
+### ComfyUI Server Setup
 
 1. **ComfyUI Server**: You need a running ComfyUI instance with the following models:
    - `realvisxlV50_v50LightningBakedvae.safetensors`
-   - `realvis_GPTsettings.safetensors`
-   - `SDXL/t2i-adapter-canny-sdxl-1.0.fp16.safetensors`
+   - `realvis_GPTsettings.safetensors` (LoRA)
+   - `SDXL/t2i-adapter-canny-sdxl-1.0.fp16.safetensors` (ControlNet)
 
 2. **ComfyUI Extensions**: Install these custom nodes in ComfyUI:
-   - AIO Preprocessor
-   - InspyrenetRembg (for Step 3)
-   - Image Transpose (for Step 3)
-   - CR Color Bars (for Step 3)
+   - **comfyui_manager** (general) https://github.com/Comfy-Org/ComfyUI-Manager
+   - **comfyui_controlnet_aux** (for Controlnet) https://github.com/Fannovel16/comfyui_controlnet_aux
+   - **comfyui_inspyrenet_rembg** (for background removal in Step 3) https://github.com/john-mnz/ComfyUI-Inspyrenet-Rembg
+   - **was_node_suite_comfyui** (for image positioning in Step 3) https://github.com/ltdrdata/was-node-suite-comfyui
+   - **comfyui_comfyroll_customnodes** (for base canvas creation in Step 3) https://github.com/Suzie1/ComfyUI_Comfyroll_CustomNodes
+   - **comfyui-hiforce-plugin** (for color conversion) https://github.com/hiforce/comfyui-hiforce-plugin
 
-## Local Development Setup
+### API Keys
+
+1. **Gemini API Key** (optional but recommended):
+   - Get your key from [Google AI Studio](https://makersuite.google.com/app/apikey)
+   - Used for intelligent prompt enhancement
+
+## 🚀 Local Development Setup
+
+### Quick Start
 
 1. **Clone/Download the files**:
    ```bash
-   # Create project directory
    mkdir comfyui-card-generator
    cd comfyui-card-generator
-   
-   # Save the app.py and requirements.txt files here
+   # Save app.py, requirements.txt, and other files here
    ```
 
 2. **Install dependencies**:
@@ -37,9 +51,12 @@ A Streamlit web application for generating custom credit card designs using Comf
    pip install -r requirements.txt
    ```
 
-3. **Configure ComfyUI connection**:
-   - Edit `app.py` and update `COMFYUI_SERVER_URL` if your ComfyUI runs on a different address
-   - Default is `http://localhost:8188`
+3. **Configure environment variables** (recommended):
+   ```bash
+   # Create .env file (optional)
+   echo "COMFYUI_SERVER_URL=http://localhost:8188" > .env
+   echo "GEMINI_API_KEY=your_gemini_api_key_here" >> .env
+   ```
 
 4. **Run the application**:
    ```bash
@@ -48,31 +65,35 @@ A Streamlit web application for generating custom credit card designs using Comf
 
 5. **Access the application**:
    - Open your browser and go to `http://localhost:8501`
-   - The app will automatically open if running locally
 
-## Production Deployment Options
+### Configuration Options
 
-### Option 1: Streamlit Cloud (Free)
+#### Environment Variables
 
-1. **Push to GitHub**:
-   ```bash
-   git init
-   git add .
-   git commit -m "Initial commit"
-   git remote add origin <your-repo-url>
-   git push -u origin main
-   ```
+Set these in your environment or modify directly in `app.py`:
 
-2. **Deploy on Streamlit Cloud**:
-   - Go to [share.streamlit.io](https://share.streamlit.io)
-   - Connect your GitHub account
-   - Select your repository
-   - Set main file as `app.py`
-   - Add secrets for ComfyUI server URL if needed
+```python
+COMFYUI_SERVER_URL = "http://your-comfyui-server:8188"
+GEMINI_API_KEY = "your-gemini-api-key"
+```
 
-**Note**: Streamlit Cloud has limited resources and may not work well with ComfyUI's computational requirements.
+#### Streamlit Secrets (Recommended for production)
 
-### Option 2: Docker Deployment
+Create `.streamlit/secrets.toml`:
+
+```toml
+[general]
+COMFYUI_SERVER_URL = "http://your-comfyui-server:8188"
+GEMINI_API_KEY = "your-gemini-api-key"
+
+[timeouts]
+request_timeout = 30
+generation_timeout = 180
+```
+
+## 🐳 Production Deployment Options
+
+### Option 1: Docker Deployment (Recommended)
 
 1. **Create Dockerfile**:
    ```dockerfile
@@ -80,216 +101,167 @@ A Streamlit web application for generating custom credit card designs using Comf
 
    WORKDIR /app
 
-   COPY requirements.txt .
-   RUN pip install -r requirements.txt
+   # Install system dependencies
+   RUN apt-get update && apt-get install -y \
+       curl \
+       && rm -rf /var/lib/apt/lists/*
 
+   # Copy requirements and install Python dependencies
+   COPY requirements.txt .
+   RUN pip install --no-cache-dir -r requirements.txt
+
+   # Copy application files
    COPY app.py .
+   COPY default_card_outline.png .
+
+   # Create directories for logs and temp files
+   RUN mkdir -p /app/logs /app/temp
 
    EXPOSE 8501
 
-   HEALTHCHECK CMD curl --fail http://localhost:8501/_stcore/health
+   # Health check
+   HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+       CMD curl -f http://localhost:8501/_stcore/health || exit 1
 
+   # Run the application
    ENTRYPOINT ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0"]
    ```
 
 2. **Build and run**:
    ```bash
    docker build -t comfyui-card-generator .
-   docker run -p 8501:8501 comfyui-card-generator
+   docker run -p 8501:8501 \
+     -e COMFYUI_SERVER_URL=http://your-comfyui:8188 \
+     -e GEMINI_API_KEY=your-key \
+     comfyui-card-generator
    ```
 
-### Option 3: Cloud VPS (Recommended)
+### Option 2: Docker Compose (Full Stack)
 
-1. **Set up Ubuntu server** (DigitalOcean, AWS EC2, etc.)
+Use the provided `docker-compose.yml` for a complete setup including ComfyUI.
 
-2. **Install dependencies**:
-   ```bash
-   sudo apt update
-   sudo apt install python3 python3-pip nginx
-   pip3 install -r requirements.txt
-   ```
+## 🔧 Configuration Guide
 
-3. **Configure systemd service** (`/etc/systemd/system/cardgen.service`):
-   ```ini
-   [Unit]
-   Description=ComfyUI Card Generator
-   After=network.target
+### Required Files
 
-   [Service]
-   Type=simple
-   User=ubuntu
-   WorkingDirectory=/home/ubuntu/comfyui-card-generator
-   ExecStart=/usr/local/bin/streamlit run app.py --server.port=8501 --server.address=0.0.0.0
-   Restart=always
+1. **default_card_outline.png**: Default Controlnet File
+2. **app.py**: Main application file
+3. **requirements.txt**: Python dependencies
 
-   [Install]
-   WantedBy=multi-user.target
-   ```
+## 🔍 Troubleshooting
 
-4. **Configure Nginx reverse proxy** (`/etc/nginx/sites-available/cardgen`):
-   ```nginx
-   server {
-       listen 80;
-       server_name your-domain.com;
+### Common Issues & Solutions
 
-       location / {
-           proxy_pass http://127.0.0.1:8501;
-           proxy_http_version 1.1;
-           proxy_set_header Upgrade $http_upgrade;
-           proxy_set_header Connection "upgrade";
-           proxy_set_header Host $host;
-           proxy_set_header X-Real-IP $remote_addr;
-           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-           proxy_set_header X-Forwarded-Proto $scheme;
-       }
-   }
-   ```
+#### 1. ComfyUI Connection Failed
+**Symptoms**: "ComfyUI Server Offline" or connection refused errors
 
-5. **Enable and start services**:
-   ```bash
-   sudo systemctl enable cardgen
-   sudo systemctl start cardgen
-   sudo systemctl enable nginx
-   sudo systemctl start nginx
-   ```
+**Solutions**:
+- Verify ComfyUI is running: `curl http://localhost:8188/system_stats`
+- Check firewall settings
+- Ensure correct server URL in configuration
+- Check ComfyUI logs for errors
 
-## Environment Configuration
+#### 2. Generation Timeout
+**Symptoms**: "Generation timed out after 3 minutes"
 
-### Environment Variables
+**Solutions**:
+- Check ComfyUI server resources (GPU memory, CPU)
+- Verify all required models are loaded
+- Increase timeout in code if needed
+- Check ComfyUI queue status
 
-Create a `.streamlit/secrets.toml` file for sensitive configuration:
+#### 3. Missing Models/Extensions
+**Symptoms**: Workflow errors or "model not found"
 
-```toml
-[general]
-COMFYUI_SERVER_URL = "http://your-comfyui-server:8188"
-
-[comfyui]
-api_key = "your-api-key-if-needed"
-timeout = 120
-```
-
-### Production Configuration
-
-For production, update these settings in `app.py`:
-
-```python
-# Production settings
-COMFYUI_SERVER_URL = os.getenv("COMFYUI_SERVER_URL", "http://localhost:8188")
-MAX_UPLOAD_SIZE = 10 * 1024 * 1024  # 10MB
-TIMEOUT_SECONDS = 180
-```
-
-## Scaling Considerations
-
-### Multiple ComfyUI Instances
-
-For high traffic, set up load balancing:
-
-```python
-COMFYUI_SERVERS = [
-    "http://comfyui-1:8188",
-    "http://comfyui-2:8188",
-    "http://comfyui-3:8188"
-]
-
-# Add round-robin server selection in ComfyUIClient
-```
-
-### Redis for Session Management
-
-For multi-instance deployments:
-
+**Required Models**:
 ```bash
-pip install streamlit-redis
+# Download to ComfyUI/models/checkpoints/
+realvisxlV50_v50LightningBakedvae.safetensors
+
+# Download to ComfyUI/models/loras/
+realvis_GPTsettings.safetensors
+
+# Download to ComfyUI/models/controlnet/
+SDXL/t2i-adapter-canny-sdxl-1.0.fp16.safetensors
 ```
 
-```python
-import streamlit_redis as redis_client
+**Required Extensions**:
+- Install via ComfyUI Manager or manually clone to `ComfyUI/custom_nodes/`
 
-# Store generated images in Redis instead of session state
-redis_client.set(f"chip_{user_id}", image_url)
-```
+#### 4. Gemini API Issues
+**Symptoms**: "Gemini API not available" or authentication errors
 
-## Monitoring and Logging
+**Solutions**:
+- Verify API key is correct
+- Check API quota and billing
+- Ensure internet connectivity
+- Try different Gemini models
 
-### Add logging to app.py:
+#### 5. Upload/Download Issues
+**Symptoms**: Failed to upload images or download results
+
+**Solutions**:
+- Check file permissions
+- Verify network connectivity
+- Ensure sufficient disk space
+- Check file size limits
+
+### Debug Mode
+
+Enable debug logging by adding to `app.py`:
 
 ```python
 import logging
-
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler('app.log'),
-        logging.StreamHandler()
-    ]
-)
+logging.basicConfig(level=logging.DEBUG)
 ```
 
-### Health checks:
+## 📊 Performance Optimization
 
-```python
-def health_check():
-    try:
-        response = requests.get(f"{COMFYUI_SERVER_URL}/system_stats", timeout=5)
-        return response.status_code == 200
-    except:
-        return False
-```
+### Server Requirements
 
-## Security Considerations
+**Minimum Requirements**:
+- 4GB RAM
+- 2 CPU cores
+- 10GB storage
+- GPU with 8GB VRAM (for ComfyUI)
 
-1. **API Authentication**: Add authentication if deploying publicly
-2. **Rate Limiting**: Implement request rate limiting
-3. **Input Validation**: Sanitize all user inputs
-4. **HTTPS**: Use SSL certificates in production
-5. **Firewall**: Restrict access to ComfyUI server
+**Recommended Requirements**:
+- 8GB+ RAM
+- 4+ CPU cores  
+- 50GB+ storage
+- GPU with 12GB+ VRAM
 
-## Troubleshooting
+### Optimization Tips
 
-### Common Issues:
+1. **Image Caching**: Implement Redis for image caching:
+   ```python
+   pip install redis streamlit-redis
+   ```
 
-1. **ComfyUI Connection Failed**:
-   - Check if ComfyUI server is running
-   - Verify the server URL and port
-   - Check firewall settings
+2. **CDN Integration**: Use CloudFlare or AWS CloudFront for static assets
 
-2. **Generation Timeout**:
-   - Increase timeout values
-   - Check ComfyUI server resources
-   - Verify models are loaded
+3. **Load Balancing**: Multiple ComfyUI instances:
+   ```python
+   COMFYUI_SERVERS = [
+       "http://comfyui-1:8188",
+       "http://comfyui-2:8188",
+       "http://comfyui-3:8188"
+   ]
+   ```
 
-3. **Memory Issues**:
-   - Monitor server memory usage
-   - Implement image cleanup
-   - Use image compression
+4. **Background Processing**: Use Celery for async generation
 
-4. **WebSocket Errors**:
-   - Check proxy configuration
-   - Verify WebSocket support
-   - Update websocket-client version
+## 🔐 Security Considerations
 
-### Logs Location:
+### Production Security Checklist
 
-- Streamlit logs: Check terminal output
-- ComfyUI logs: Check ComfyUI console
-- System logs: `/var/log/syslog`
-
-## Performance Optimization
-
-1. **Image Caching**: Cache generated images
-2. **CDN**: Use CDN for static assets
-3. **Compression**: Implement image compression
-4. **Async Processing**: Use background tasks for long operations
-
-## Support
-
-For issues and questions:
-- Check ComfyUI documentation
-- Review Streamlit documentation
-- Monitor server logs for errors
-
-## License
-
-[Add your license information here]
+- [ ] Use HTTPS with valid SSL certificates
+- [ ] Implement rate limiting
+- [ ] Add authentication/authorization
+- [ ] Sanitize all user inputs
+- [ ] Use environment variables for secrets
+- [ ] Implement CORS policies
+- [ ] Set up firewall rules
+- [ ] Regular security updates
+- [ ] Monitor access logs
+- [ ] Implement session management
