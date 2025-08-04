@@ -1,4 +1,4 @@
-# ComfyUI Card Generator - Streamlit Version
+# ComfyUI Card Generator - Streamlit 
 
 A modern Streamlit web application for generating custom credit card designs using ComfyUI workflows with AI-powered chip and card creation.
 
@@ -9,17 +9,15 @@ A modern Streamlit web application for generating custom credit card designs usi
 - **Step 3**: Combine elements and export final card design
 - **AI Enhancement**: Gemini API integration for professional prompt optimization
 - **Advanced Options**: ControlNet support for custom shapes and designs
-- **Progress Tracking**: Visual step indicator and progress monitoring
-- **Error Handling**: Comprehensive error handling and recovery
 
 ## 🛠️ Prerequisites
 
 ### ComfyUI Server Setup
 
 1. **ComfyUI Server**: You need a running ComfyUI instance with the following models:
-   - `realvisxlV50_v50LightningBakedvae.safetensors`
+   - `realvisxlV50_v50LightningBakedvae.safetensors` https://civitai.com/models/139562/realvisxl-v50
    - `realvis_GPTsettings.safetensors` (LoRA)
-   - `SDXL/t2i-adapter-canny-sdxl-1.0.fp16.safetensors` (ControlNet)
+   - `SDXL/t2i-adapter-canny-sdxl-1.0.fp16.safetensors` (ControlNet) Downloaded from comfyui manager
 
 2. **ComfyUI Extensions**: Install these custom nodes in ComfyUI:
    - **comfyui_manager** (general) https://github.com/Comfy-Org/ComfyUI-Manager
