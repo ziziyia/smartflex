@@ -37,35 +37,6 @@ A modern Streamlit web application for generating custom credit card designs usi
 
 ## 🚀 Local Development Setup
 
-### Quick Start
-
-1. **Clone/Download the files**:
-   ```bash
-   mkdir comfyui-card-generator
-   cd comfyui-card-generator
-   # Save app.py, requirements.txt, and other files here
-   ```
-
-2. **Install dependencies**:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-3. **Configure environment variables** (recommended):
-   ```bash
-   # Create .env file (optional)
-   echo "COMFYUI_SERVER_URL=http://localhost:8188" > .env
-   echo "GEMINI_API_KEY=your_gemini_api_key_here" >> .env
-   ```
-
-4. **Run the application**:
-   ```bash
-   streamlit run app.py
-   ```
-
-5. **Access the application**:
-   - Open your browser and go to `http://localhost:8501`
-
 ### Configuration Options
 
 #### Environment Variables
@@ -91,7 +62,7 @@ request_timeout = 30
 generation_timeout = 180
 ```
 
-## 🐳 Production Deployment Options
+## Deployment Options
 
 ### Option 1: Docker Deployment (Recommended)
 
@@ -215,9 +186,7 @@ import logging
 logging.basicConfig(level=logging.DEBUG)
 ```
 
-## 📊 Performance Optimization
-
-### Server Requirements
+## Server Requirements
 
 **Minimum Requirements**:
 - 4GB RAM
@@ -230,38 +199,3 @@ logging.basicConfig(level=logging.DEBUG)
 - 4+ CPU cores  
 - 50GB+ storage
 - GPU with 12GB+ VRAM
-
-### Optimization Tips
-
-1. **Image Caching**: Implement Redis for image caching:
-   ```python
-   pip install redis streamlit-redis
-   ```
-
-2. **CDN Integration**: Use CloudFlare or AWS CloudFront for static assets
-
-3. **Load Balancing**: Multiple ComfyUI instances:
-   ```python
-   COMFYUI_SERVERS = [
-       "http://comfyui-1:8188",
-       "http://comfyui-2:8188",
-       "http://comfyui-3:8188"
-   ]
-   ```
-
-4. **Background Processing**: Use Celery for async generation
-
-## 🔐 Security Considerations
-
-### Production Security Checklist
-
-- [ ] Use HTTPS with valid SSL certificates
-- [ ] Implement rate limiting
-- [ ] Add authentication/authorization
-- [ ] Sanitize all user inputs
-- [ ] Use environment variables for secrets
-- [ ] Implement CORS policies
-- [ ] Set up firewall rules
-- [ ] Regular security updates
-- [ ] Monitor access logs
-- [ ] Implement session management
